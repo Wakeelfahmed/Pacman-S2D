@@ -3,11 +3,11 @@
 #include <sstream>
 #include <fstream> // Include the header file for file stream operations (ifstream and ofstream)
 #include <iostream>
+#include <iomanip>
 
 Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f), _cPacmanFrameTime(250), _cMunchieFrameTime(500)
 {
-	_pacman = new Player();
-	_pacman->dead = false;
+	Pacman_Player = new Player();	Pacman_Player->dead = false;
 	_pacmanCurrentFrameTime = 0;
 	_pacmanFrame = 0;
 	_frameCount = 0;
@@ -30,18 +30,14 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f), 
 	_ghosts[0]->speed = 0.2f;
 
 	//Initialise important Game aspects
-
 	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Pacman", 60);
-
 	Input::Initialise();
-
 	// Start the Game Loop - This calls Update and Draw in game loop 
 	Graphics::StartGameLoop();
 }
-
 Pacman::~Pacman()
 {
-	delete _pacmanTexture;	delete _pacmanSourceRect;	delete _pacmanPosition;
+	delete Pacman_Player->texture;	/*delete _pacmanSourceRect;*/	delete Pacman_Player->position;
 	delete _munchieBlueTexture;	delete _munchieInvertedTexture;	delete _munchieRect;
 
 	//Clean up the Texture
@@ -56,40 +52,35 @@ Pacman::~Pacman()
 	//Order of operations is important, array deleted last
 	delete[] _munchies;
 }
-
 void Pacman::LoadContent()
 {
 	// Load Pacman
-	_pacmanTexture = new Texture2D();	_pacmanTexture->Load("Textures/Pacman.tga", false);		_pacmanPosition = new Vector2(350.0f, 350.0f);	_pacmanSourceRect = new Rect(0.0f, 0.0f, 32, 32);
+	Pacman_Player->texture->Load("Textures/Pacman.tga", false); Pacman_Player->sourceRect = new Rect(0,0, 32, 32);	Pacman_Player->position = new Vector2(350.0f, 350.0f);	//_pacmanSourceRect = new Rect(0.0f, 0.0f, 32, 32);
 	// Initialize game state, score, and high score
-	_isGameOver = false;
+	Pacman_Player->dead = false;
 	_score = 50;	_highScore = 0;	LoadHighScore();
 	// Load Cherry Inverted
-	_cherryInvertedTexture = new Texture2D();	_cherryInvertedTexture->Load("Textures/CherryInverted.png", false);	_cherryInvertedPosition = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
-	_cherryDirection = 0; // Start the cherry moving to the right
-	_cherrySpeed = 0.1f;   
-	_cherryTexture = new Texture2D();	_cherryTexture->Load("Textures/Cherry.png", false);
+	_cherryInvertedTexture = new Texture2D();	_cherryInvertedTexture->Load("Textures/CherryInverted.png", false);	_cherryPosition = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
+	_cherryTexture = new Texture2D();			_cherryTexture->Load("Textures/Cherry.png", false);
+	_cherrySpeed = 0.1f;
 	//_cherryPosition = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
-	_cherryPosition = _cherryInvertedPosition;
 	// Set the duration (in milliseconds) for displaying the "Start Game" message
 	_startMessageDisplayTime = 3000; // 3 seconds
 	_showStartMessage = true;
 	//Load Ghost
 	_ghosts[0]->texture = new Texture2D();	_ghosts[0]->texture->Load("Textures/GhostBlue.png", false);	_ghosts[0]->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
-	_ghosts[0]->sourceRect = new Rect(_ghosts[0]->position->X, _ghosts[0]->position->Y, 20, 20);
-	_startSound = new S2D::SoundEffect();
-	_startSound->Load("sound/pop.wav");
-	// Load Munchie
-	_munchieBlueTexture = new Texture2D();	_munchieBlueTexture->Load("Textures/Munchie.tga", true);
-	Texture2D* munchieTex = new Texture2D();
-	munchieTex->Load("Textures/Munchie.png", false);
-	int i;
-	for (i = 0; i < MUNCHIECOUNT; i++)
-	{
-		_munchies[i]->texture = munchieTex;
-		_munchies[i]->sourceRect = new Rect((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()), 12, 12);
-	}
+	_ghosts[0]->sourceRect = new Rect(0, 0, 20, 20);
 
+	_startSound = new S2D::SoundEffect();	_startSound->Load("sound/pop.wav");
+
+	_munchieBlueTexture = new Texture2D();		_munchieBlueTexture->Load("Textures/Munchie.tga", true);// Load Munchies
+	int i;
+	for (i = 0; i < MUNCHIECOUNT; i++) {
+		_munchies[i]->texture = _munchieBlueTexture;
+		_munchies[i]->sourceRect = new Rect((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()), 12, 12);
+		_munchies[i]->position = new Vector2(_munchies[i]->sourceRect->X, _munchies[i]->sourceRect->Y);
+		//_munchies[i]->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
+	}
 	_munchieInvertedTexture = new Texture2D();	_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);//	_munchieRect = new Rect(100.0f, 450.0f, 12, 12);
 
 	// Set string position
@@ -101,7 +92,6 @@ void Pacman::LoadContent()
 	_menuRectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
 	_menuStringPosition = new Vector2(Graphics::GetViewportWidth() / 2.0f, Graphics::GetViewportHeight() / 2.0f);
 }
-
 void Pacman::Update(int elapsedTime)
 {
 	_pacmanCurrentFrameTime += elapsedTime;
@@ -111,37 +101,12 @@ void Pacman::Update(int elapsedTime)
 	{
 		Audio::Play(_startSound);
 	}
-	if (_showStartMessage) // Play sound only on the first frame when the message appears
-	{
+	if (_showStartMessage) //dont do anything until game starts
 		return;
-	}
-	if (!_isGameOver) // Only update the game if it's not over
+
+	if (!Pacman_Player->dead) // Only update the game if it's not over
 	{
 		UpdateCherryCollision();
-
-		// Update cherry position
-		//_cherryPosition->X += _cherrySpeed * elapsedTime; // Modify the value (0.1f) as needed to control cherry's movement speed			not needed
-
-		// Wrap the cherry around the screen if it goes off the edges
-		if (_cherryPosition->X > Graphics::GetViewportWidth())
-		{
-			_cherryPosition->X = 0;
-			_cherryPosition->Y = rand() % Graphics::GetViewportHeight();
-		}
-
-		// Wrap the cherryInverted around the screen if it goes off the edges
-		if (_cherryInvertedPosition->X < 0)
-		{
-			_cherryInvertedPosition->X = Graphics::GetViewportWidth();
-			_cherryInvertedPosition->Y = rand() % Graphics::GetViewportHeight();
-		}
-
-		// Wrap the cherry around the screen if it goes off the edges
-		if (_cherryPosition->X > Graphics::GetViewportWidth())
-		{
-			_cherryPosition->X = 0;
-			_cherryPosition->Y = rand() % Graphics::GetViewportHeight();
-		}
 
 		if (keyboardState->IsKeyDown(Input::Keys::P) && !_pKeyDown)
 		{
@@ -155,56 +120,38 @@ void Pacman::Update(int elapsedTime)
 		if (!_paused)
 		{
 			_frameCount++;
-
+			UpdateGhost(_ghosts[0], elapsedTime);
+			CheckGhostCollisions();
 			// Checks if key is pressed
 			if (keyboardState->IsKeyDown(Input::Keys::RIGHT))
-			{
 				pacmanDirection = Right;
-			}
 			if (keyboardState->IsKeyDown(Input::Keys::UP))
-			{
 				pacmanDirection = Up;
-			}
 			if (keyboardState->IsKeyDown(Input::Keys::LEFT))
-			{
 				pacmanDirection = Left;
-			}
 			if (keyboardState->IsKeyDown(Input::Keys::DOWN))
-			{
 				pacmanDirection = Down;
-			}
 
-			if (pacmanDirection == Right) {
-				_pacmanPosition->X += _cPacmanSpeed * elapsedTime;
-			}
-			if (pacmanDirection == Up) {
-				_pacmanPosition->Y -= _cPacmanSpeed * elapsedTime;
-			}
-			if (pacmanDirection == Left) {
-				_pacmanPosition->X -= _cPacmanSpeed * elapsedTime;
-			}
-			if (pacmanDirection == Down) {
-				_pacmanPosition->Y += _cPacmanSpeed * elapsedTime;
-			}
+			if (pacmanDirection == Right)
+				Pacman_Player->position->X += _cPacmanSpeed * elapsedTime;
+			if (pacmanDirection == Up)
+				Pacman_Player->position->Y -= _cPacmanSpeed * elapsedTime;
+			if (pacmanDirection == Left)
+				Pacman_Player->position->X -= _cPacmanSpeed * elapsedTime;
+			if (pacmanDirection == Down)
+				Pacman_Player->position->Y += _cPacmanSpeed * elapsedTime;
 
-			_pacmanSourceRect->Y = _pacmanSourceRect->Height * pacmanDirection;
+			Pacman_Player->sourceRect->Y = Pacman_Player->sourceRect->Height * pacmanDirection;	//Changing Pacman Texture Direction
 			// Checks if Pacman is trying to disappear
-			if (_pacmanPosition->X > Graphics::GetViewportWidth() - 0.5 * _pacmanSourceRect->Width)
-			{
-				_pacmanPosition->X = 0 - 0.5 * _pacmanSourceRect->Width;
-			}
-			if (_pacmanPosition->X < 0 - 0.5 * _pacmanSourceRect->Width)
-			{
-				_pacmanPosition->X = Graphics::GetViewportWidth() - 0.5 * _pacmanSourceRect->Width;
-			}
-			if (_pacmanPosition->Y > Graphics::GetViewportHeight() - 0.5 * _pacmanSourceRect->Width)
-			{
-				_pacmanPosition->Y = 0 - 0.5 * _pacmanSourceRect->Height;
-			}
-			if (_pacmanPosition->Y < 0 - 0.5 * _pacmanSourceRect->Height)
-			{
-				_pacmanPosition->Y = Graphics::GetViewportHeight() - 0.5 * _pacmanSourceRect->Height;
-			}
+			if (Pacman_Player->position->X > Graphics::GetViewportWidth() - 0.5 * Pacman_Player->sourceRect->Width)
+				Pacman_Player->position->X = 0 - 0.5 * Pacman_Player->sourceRect->Width;
+			if (Pacman_Player->position->X < 0 - 0.5 * Pacman_Player->sourceRect->Width)
+				Pacman_Player->position->X = Graphics::GetViewportWidth() - 0.5 * Pacman_Player->sourceRect->Width;
+			if (Pacman_Player->position->Y > Graphics::GetViewportHeight() - 0.5 * Pacman_Player->sourceRect->Width)
+				Pacman_Player->position->Y = 0 - 0.5 * Pacman_Player->sourceRect->Height;
+			if (Pacman_Player->position->Y < 0 - 0.5 * Pacman_Player->sourceRect->Height)
+				Pacman_Player->position->Y = Graphics::GetViewportHeight() - 0.5 * Pacman_Player->sourceRect->Height;
+
 			if (_pacmanCurrentFrameTime > _cPacmanFrameTime)
 			{
 				_pacmanFrame++;
@@ -213,16 +160,20 @@ void Pacman::Update(int elapsedTime)
 
 				_pacmanCurrentFrameTime = 0;
 
-				_pacmanSourceRect->X = _pacmanSourceRect->Width * _pacmanFrame;
+				Pacman_Player->sourceRect->X = Pacman_Player->sourceRect->Width * _pacmanFrame;
 			}
 
 			// Check for collision with screen walls
-			if (_pacmanPosition->X < 0 || _pacmanPosition->X > Graphics::GetViewportWidth() ||
-				_pacmanPosition->Y < 0 || _pacmanPosition->Y > Graphics::GetViewportHeight())
+			if (Pacman_Player->position->X < 0 || Pacman_Player->position->X > Graphics::GetViewportWidth() ||
+				Pacman_Player->position->Y < 0 || Pacman_Player->position->Y > Graphics::GetViewportHeight())
 			{
-				_isGameOver = true;
+				Pacman_Player->dead = true;
 			}
-
+			for (int i = 0; i < MUNCHIECOUNT; i++)
+			{
+				if (Munchies_Collision(_munchies[i]))
+					UpdateMunchies(_munchies[i]);
+			}
 		}
 	}
 	else // Game is over
@@ -231,14 +182,13 @@ void Pacman::Update(int elapsedTime)
 		if (keyboardState->IsKeyDown(Input::Keys::R))
 		{
 			// Restart the game
-			_isGameOver = false;
+			Pacman_Player->dead = false;
 			_score = 0;
-			_pacmanPosition = new Vector2(350.0f, 350.0f); // Reset Pacman's position
+			Pacman_Player->position = new Vector2(350.0f, 350.0f); // Reset Pacman's position
 			_cherryPosition = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight())); // Reset cherry's position
 			_frameCount = 0;
 			_pacmanFrame = 0;
 			_pacmanCurrentFrameTime = 0;
-			//now_pacmanDirection = 0;
 			_paused = false;
 			_showStartMessage = true;
 			_startMessageDisplayTime = 3000;
@@ -246,15 +196,12 @@ void Pacman::Update(int elapsedTime)
 		}
 	}
 }
-
 void Pacman::Draw(int elapsedTime)
 {
-	std::stringstream stream;
-	stream << "Pacman X: " << _pacmanPosition->X << "\nY: " << _pacmanPosition->Y;
-
+	std::stringstream stream;	stream << "Pacman X: " << std::fixed << std::setprecision(1) << Pacman_Player->position->X << "\tY: " << std::fixed << std::setprecision(1) << Pacman_Player->position->Y << std::endl; //retain only 1st decimal
+	//stream << "Pacman X: " << Pacman_Player->position->X << "\tY: " << Pacman_Player->position->Y;
 	SpriteBatch::BeginDraw(); // Starts Drawing
-
-	if (_isGameOver) { DrawEndGame(); }
+	if (Pacman_Player->dead) { DrawEndGame(); }
 	else
 	{
 		// Show "Start Game" message
@@ -264,7 +211,7 @@ void Pacman::Draw(int elapsedTime)
 			startMessageStream << "Start Game!";
 
 			// You can customize the position and color of the message as needed
-			Vector2 startMessagePosition(Graphics::GetViewportWidth() / 2.0f, Graphics::GetViewportHeight() / 2.0f);
+			Vector2 startMessagePosition((Graphics::GetViewportWidth()-5) / 2.0f, Graphics::GetViewportHeight() / 2.0f);
 			SpriteBatch::DrawString(startMessageStream.str().c_str(), &startMessagePosition, Color::Green);
 
 			// Check if it's time to hide the message
@@ -276,17 +223,20 @@ void Pacman::Draw(int elapsedTime)
 		else // "Start Game" message is not visible
 		{
 			// Draws Pacman and other game elements
-			SpriteBatch::Draw(_pacmanTexture, _pacmanPosition, _pacmanSourceRect);
+			SpriteBatch::Draw(Pacman_Player->texture, Pacman_Player->position, Pacman_Player->sourceRect);
 			// Show munchie
 			for (int i = 0; i < MUNCHIECOUNT; i++)
 			{
+				if (_munchies[i]->position->X == -1)
+					continue;
 				if (_frameCount < 30)
-					SpriteBatch::Draw(_munchieInvertedTexture, _munchies[i]->sourceRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);				// Draw Red Munchie
+					//SpriteBatch::Draw(_munchieInvertedTexture, _munchies[i]->position, _munchies[i]->sourceRect);
+					SpriteBatch::Draw(_munchieInvertedTexture, _munchies[i]->sourceRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);	// Draw Red Munchie
 				else
-					SpriteBatch::Draw(_munchieBlueTexture, _munchies[i]->sourceRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);				// Draw Blue Munchie
+					SpriteBatch::Draw(_munchieBlueTexture, _munchies[i]->sourceRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);		// Draw Blue Munchie
 			}
 			if (_frameCount < 30) {
-				SpriteBatch::Draw(_cherryInvertedTexture, _cherryInvertedPosition);
+				SpriteBatch::Draw(_cherryInvertedTexture, _cherryPosition);
 			}
 			else
 			{
@@ -295,8 +245,7 @@ void Pacman::Draw(int elapsedTime)
 				if (_frameCount >= 60)
 					_frameCount = 0;
 			}
-			//_ghosts[0]->texture->Load("Textures/GhostBlue.png", false);
-			SpriteBatch::Draw(_ghosts[0]->texture, _ghosts[0]->sourceRect);//, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);				// Draw ghost
+			SpriteBatch::Draw(_ghosts[0]->texture, _ghosts[0]->position, _ghosts[0]->sourceRect);
 			// Draws String
 			SpriteBatch::DrawString(stream.str().c_str(), _stringPosition, Color::Green);
 
@@ -319,36 +268,67 @@ void Pacman::Draw(int elapsedTime)
 		// Draw the score
 		std::stringstream scoreStream;
 		scoreStream << "Score: " << _score;
-		Vector2 scorePosition(300.0f, 30.0f); // You can adjust the position of the score on the screen
+		Vector2 scorePosition((Graphics::GetViewportWidth() - 3) / 2, 30.0f); // You can adjust the position of the score on the screen
 		SpriteBatch::DrawString(scoreStream.str().c_str(), &scorePosition, Color::White);
 	}
-
 	SpriteBatch::EndDraw(); // Ends Drawing
 }
-
-//void Pacman::UpdateMunchies(Collectable*, int elapsedTime) {}
-
+void Pacman::CheckGhostCollisions() {
+	// Local Variables
+	int i = 0;
+	int bottom1 = Pacman_Player->position->Y + Pacman_Player->sourceRect->Height;
+	int bottom2 = 0;
+	int left1 = Pacman_Player->position->X;
+	int left2 = 0;
+	int right1 = Pacman_Player->position->X + Pacman_Player->sourceRect->Width;
+	int right2 = 0;
+	int top1 = Pacman_Player->position->Y;
+	int top2 = 0;
+	for (i = 0; i < GHOSTCOUNT; i++)
+	{
+		// Populate variables with Ghost data
+		bottom2 = _ghosts[i]->position->Y + _ghosts[i]->sourceRect->Height;
+		left2 = _ghosts[i]->position->X;
+		right2 = _ghosts[i]->position->X + _ghosts[i]->sourceRect->Width;
+		top2 = _ghosts[i]->position->Y;
+		if ((bottom1 > top2) && (top1 < bottom2) && (right1 > left2) && (left1 < right2))
+		{
+			Pacman_Player->dead = true;
+			i = GHOSTCOUNT;
+		}
+	}
+}
+void Pacman::UpdateMunchies(Collectable* Munchie) {
+	Munchie->position->X = -1;
+	Munchie->position->Y = -1;
+	Munchie->sourceRect->X = -1;
+	Munchie->sourceRect->Y = -1;
+}
+bool Pacman::Munchies_Collision(Collectable* Munchie) {
+	if (Pacman_Player->position->X + Pacman_Player->sourceRect->Width > Munchie->position->X &&
+		Pacman_Player->position->X < Munchie->position->X + Munchie->texture->GetWidth() &&
+		Pacman_Player->position->Y + Pacman_Player->sourceRect->Height > Munchie->position->Y &&
+		Pacman_Player->position->Y < Munchie->position->Y + Munchie->texture->GetHeight())
+	
+		return true;
+		return false;	
+}
 void Pacman::UpdateGhost(MovingEnemy* ghost, int elapsedTime)
 {
 	if (ghost->direction == 0) //Moves Right
-	{
 		ghost->position->X += ghost->speed * elapsedTime;
-	}
 	else if (ghost->direction == 1) //Moves Left
-	{
 		ghost->position->X -= ghost->speed * elapsedTime;
-	}
-	if (ghost->position->X + ghost->sourceRect->Width >=
-		Graphics::GetViewportWidth()) //Hits Right edge
-	{
+	if (ghost->position->X + ghost->sourceRect->Width >= Graphics::GetViewportWidth()) //Hits Right edge
 		ghost->direction = 1; //Change direction
-	}
 	else if (ghost->position->X <= 0) //Hits left edge
-	{
 		ghost->direction = 0; //Change direction
-	}
-}
+	//_pacmanSourceRect->Y = _pacmanSourceRect->Height * pacmanDirection;
 
+	//ghost->sourceRect->Y = ghost->sourceRect->Height * ghost->direction;
+	//_pacmanSourceRect->Y = _pacmanSourceRect->Height * pacmanDirection;
+
+}
 void Pacman::DrawEndGame()
 {
 	// Check and update high score if necessary
@@ -361,8 +341,8 @@ void Pacman::DrawEndGame()
 	std::stringstream endGameStream;
 	endGameStream << "GAME OVER\n";
 	endGameStream << "Game Stats are:\n";
-	endGameStream << "Your Score: " << 50 << "\n";
-	endGameStream << "High Score: " << 120 << "\n";
+	endGameStream << "Your Score: " << _score << "\n";
+	endGameStream << "High Score: " << _highScore << "\n";
 	endGameStream << "Press R to restart";
 
 	// You can customize the position and color of the message as needed
@@ -374,28 +354,23 @@ void Pacman::DrawEndGame()
 	if (keyboardState->IsKeyDown(Input::Keys::R))
 	{
 		// Restart the game
-		_isGameOver = false;
+		Pacman_Player->dead = false;
 		_score = 0;
-		_pacmanPosition = new Vector2(350.0f, 350.0f); // Reset Pacman's position
+		Pacman_Player->position = new Vector2(350.0f, 350.0f); // Reset Pacman's position
 		_cherryPosition = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight())); // Reset cherry's position
 		_frameCount = 0;
 		_pacmanFrame = 0;
 		_pacmanCurrentFrameTime = 0;
-		//now_pacmanDirection = 0;
 		_paused = false;
 		_showStartMessage = true;
 		_startMessageDisplayTime = 3000;
 		LoadHighScore(); // Load high score from file
-
 	}
 }
-
-void Pacman::UpdateScore()
+void Pacman::UpdateScore()// Increment the score
 {
-	// Increment the score
 	_score += 10; // Adjust the score increment as needed
 }
-
 void Pacman::LoadHighScore()
 {
 	std::ifstream file("highscore.txt");
@@ -405,13 +380,13 @@ void Pacman::LoadHighScore()
 		file.close();
 	}
 }
-
 void Pacman::SaveHighScore()
 {
 	std::ofstream file("highscore.txt");
 	if (file.is_open())
 	{
-		file << "highscore=" << _highScore;
+		//file << "highscore=" << _highScore;
+		file << _highScore;
 		if (!file.fail())
 		{
 			file.close();
@@ -427,70 +402,19 @@ void Pacman::SaveHighScore()
 		std::cout << "Error: Unable to open the highscore.txt file for writing." << std::endl;
 	}
 }
-
 void Pacman::UpdateCherryCollision()
 {
-	// Local Variables
-	//int i = 0;
-	//int bottom1 = _pacmanPosition->Y + 32;
-	//int bottom2 = 0;
-	//int left1 = _pacmanPosition->X;
-	//int left2 = 0;
-	//int right1 = _pacmanPosition->X + 32;
-	//int right2 = 0;
-	//int top1 = _pacmanPosition->Y;
-	//int top2 = 0;
-
-	//bottom2 = _cherryPosition->Y + _cherryTexture->GetHeight();
-	//left2 = _cherryPosition->X;
-	//right2 =
-	//	_cherryPosition->X + _cherryTexture->GetWidth();
-	//top2 = _cherryPosition->Y;
-	//if (_isCherryVisible && (bottom1 > top2) && (top1 < bottom2) && (right1 > left2)
-	//	&& (left1 < right2))
-	//{
-	//	cout << "Collision\n";
-	//	//_pacman->dead = true;
-	//	//i = GHOSTCOUNT;
-	//}
-
-	//_pacmanSourceRect->Width;
-
-
 	// Check for collision between Pacman and the cherry
-	if (_pacmanPosition->X + _pacmanSourceRect->Width > _cherryPosition->X &&
-		_pacmanPosition->X < _cherryPosition->X + _cherryTexture->GetWidth() &&
-		_pacmanPosition->Y + _pacmanSourceRect->Height > _cherryPosition->Y &&
-		_pacmanPosition->Y < _cherryPosition->Y + _cherryTexture->GetHeight())
+	if (Pacman_Player->position->X + Pacman_Player->sourceRect->Width > _cherryPosition->X &&
+		Pacman_Player->position->X < _cherryPosition->X + _cherryTexture->GetWidth() &&
+		Pacman_Player->position->Y + Pacman_Player->sourceRect->Height > _cherryPosition->Y &&
+		Pacman_Player->position->Y < _cherryPosition->Y + _cherryTexture->GetHeight())
 	{
 		// Pacman collided with the cherry
 		UpdateScore();
-		//_isCherryVisible = false; // Make the cherry invisible
 
 		// Respawn the cherry at a random position within the visible area
 		_cherryPosition->X = rand() % (Graphics::GetViewportWidth() - _cherryTexture->GetWidth());
 		_cherryPosition->Y = rand() % (Graphics::GetViewportHeight() - _cherryTexture->GetHeight());
-		_cherryInvertedPosition->X = _cherryPosition->X;
-		_cherryInvertedPosition->Y = _cherryPosition->Y;
-		// Set the cherry visibility flag to true
-		//_isCherryVisible = true;
 	}
-
-	//if (_pacmanPosition->X + _pacmanSourceRect->Width > _cherryInvertedPosition->X &&
-	// Check for collision between Pacman and the inverted cherry
-	//	_pacmanPosition->X < _cherryInvertedPosition->X + _cherryInvertedTexture->GetWidth() &&
-	//	_pacmanPosition->Y + _pacmanSourceRect->Height > _cherryInvertedPosition->Y &&
-	//	_pacmanPosition->Y < _cherryInvertedPosition->Y + _cherryInvertedTexture->GetHeight())
-	//{
-	//	// Pacman collided with the inverted cherry
-	//	UpdateScore();
-	//	_isCherryVisible = false; // Make the inverted cherry invisible
-
-	//	// Respawn the inverted cherry at a random position within the visible area
-	//	_cherryInvertedPosition->X = rand() % (Graphics::GetViewportWidth() - _cherryInvertedTexture->GetWidth());
-	//	_cherryInvertedPosition->Y = rand() % (Graphics::GetViewportHeight() - _cherryInvertedTexture->GetHeight());
-
-	//	// Set the cherry visibility flag to true
-	//	_isCherryVisible = true;
-	//}
 }

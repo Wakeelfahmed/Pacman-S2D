@@ -28,6 +28,7 @@ struct Player
 	Texture2D* texture;
 	Vector2* position;
 	bool dead;
+	Player() { texture = new Texture2D(); }
 };
 struct Collectable
 {
@@ -58,54 +59,28 @@ private:
 	void CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey);
 	void CheckViewportCollision();
 	// New variables for game state, score, and high score
-	bool _isGameOver;
+	//bool _isGameOver;
 	int _highScore;
 	//Update methods
 	void UpdatePacman(int elapsedTime);
-	void UpdateMunchies(Collectable*, int elapsedTime);
+	void UpdateMunchies(Collectable*);
+	bool Munchies_Collision(Collectable* Munchie);
 	S2D::SoundEffect* _startSound;
 	// Data to represent Pacman
-	Player* _pacman;
-	Vector2* _pacmanPosition;
-	Rect* _pacmanSourceRect;
-	Texture2D* _pacmanTexture;
+	Player* Pacman_Player;
+	//Vector2* _pacmanPosition;
+	//Rect* _pacmanSourceRect;
 	int _pacmanFrame;
 	int _pacmanCurrentFrameTime;
 
 	MovingEnemy* _ghosts[GHOSTCOUNT];
-	void CheckGhostCollisions() {
-		// Local Variables
-		int i = 0;
-		int bottom1 = _pacman->position->Y + _pacman->sourceRect->Height;
-		int bottom2 = 0;
-		int left1 = _pacman->position->X;
-		int left2 = 0;
-		int right1 = _pacman->position->X + _pacman->sourceRect->Width;
-		int right2 = 0;
-		int top1 = _pacman->position->Y;
-		int top2 = 0;
-		for (i = 0; i < GHOSTCOUNT; i++)
-		{
-			// Populate variables with Ghost data
-			bottom2 = _ghosts[i]->position->Y + _ghosts[i]->sourceRect->Height;
-			left2 = _ghosts[i]->position->X;
-			right2 =
-				_ghosts[i]->position->X + _ghosts[i]->sourceRect->Width;
-			top2 = _ghosts[i]->position->Y;
-			if ((bottom1 > top2) && (top1 < bottom2) && (right1 > left2)
-				&& (left1 < right2))
-			{
-				_pacman->dead = true;
-				i = GHOSTCOUNT;
-			}
-		}
-	}
+	void CheckGhostCollisions();
 
 	void UpdateGhost(MovingEnemy*, int elapsedTime);
 	//Constant data for Game Variables 
 	float _cPacmanSpeed;
 
-	enum direction { Right, Down, Left, Up};
+	enum direction { Right, Down, Left, Up };
 	direction pacmanDirection;
 
 	// Data to represent Munchie
@@ -118,8 +93,6 @@ private:
 	int _munchieFrame;
 	int _munchieCurrentFrameTime;
 	Texture2D* _cherryInvertedTexture;
-	Vector2* _cherryInvertedPosition;
-	int _cherryDirection; // Add this variable to store the cherry's movement direction
 	float _cherrySpeed;   // Add this variable to control cherry's movement speed
 	// Position for String
 	Vector2* _stringPosition;
