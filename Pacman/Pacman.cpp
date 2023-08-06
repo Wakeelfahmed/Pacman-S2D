@@ -5,9 +5,53 @@
 #include <iostream>
 #include <iomanip>
 
+const int MAZE_WIDTH = 20;
+const int MAZE_HEIGHT = 15;
+const int TILE_SIZE = 40; // Increase this value to increase the gap between the maze tiles
+
+// Define the maze layout using a 2D array
+int maze[MAZE_HEIGHT][MAZE_WIDTH] = {
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0},
+	{0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0},
+	{0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0},
+	{0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0},
+	{0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0},
+	{0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0},
+	{0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0},
+	{0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0},
+	{0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0},
+	{0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 3, 0},
+};
+
+// Function to draw the maze
+void drawMaze() {
+	for (int y = 0; y < MAZE_HEIGHT; y++) {
+		for (int x = 0; x < MAZE_WIDTH; x++) {
+			switch (maze[y][x]) {
+			case 0: // Wall
+				SpriteBatch::DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, S2D::Color::Blue);
+				break;
+			case 1: // Empty space
+				SpriteBatch::DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, S2D::Color::Black);
+				break;
+			case 2: // Dot
+				SpriteBatch::DrawRectangle(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 10, 20, S2D::Color::White);
+				break;
+			case 3: // Pacman starting position
+				SpriteBatch::DrawRectangle(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 5, 20, S2D::Color::Yellow);
+				break;
+			}
+		}
+	}
+}
 Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f), _cPacmanFrameTime(250), _cMunchieFrameTime(500)
 {
-	Pacman_Player = new Player();	Pacman_Player->dead = false;
+	Pacman_Player = new Player();
 	_pacmanCurrentFrameTime = 0;
 	_pacmanFrame = 0;
 	_frameCount = 0;
@@ -55,7 +99,7 @@ Pacman::~Pacman()
 void Pacman::LoadContent()
 {
 	// Load Pacman
-	Pacman_Player->texture->Load("Textures/Pacman.tga", false); Pacman_Player->sourceRect = new Rect(0,0, 32, 32);	Pacman_Player->position = new Vector2(350.0f, 350.0f);	//_pacmanSourceRect = new Rect(0.0f, 0.0f, 32, 32);
+	Pacman_Player->texture->Load("Textures/Pacman.tga", false); Pacman_Player->sourceRect = new Rect(0, 0, 32, 32);	Pacman_Player->position = new Vector2(285.0f, 350.0f);	//_pacmanSourceRect = new Rect(0.0f, 0.0f, 32, 32);
 	// Initialize game state, score, and high score
 	Pacman_Player->dead = false;
 	_score = 50;	_highScore = 0;	LoadHighScore();
@@ -211,7 +255,7 @@ void Pacman::Draw(int elapsedTime)
 			startMessageStream << "Start Game!";
 
 			// You can customize the position and color of the message as needed
-			Vector2 startMessagePosition((Graphics::GetViewportWidth()-5) / 2.0f, Graphics::GetViewportHeight() / 2.0f);
+			Vector2 startMessagePosition((Graphics::GetViewportWidth() - 5) / 2.0f, Graphics::GetViewportHeight() / 2.0f);
 			SpriteBatch::DrawString(startMessageStream.str().c_str(), &startMessagePosition, Color::Green);
 
 			// Check if it's time to hide the message
@@ -299,19 +343,18 @@ void Pacman::CheckGhostCollisions() {
 	}
 }
 void Pacman::UpdateMunchies(Collectable* Munchie) {
-	Munchie->position->X = -1;
-	Munchie->position->Y = -1;
-	Munchie->sourceRect->X = -1;
-	Munchie->sourceRect->Y = -1;
+	Munchie->position->X = -1;		Munchie->position->Y = -1;
+	Munchie->sourceRect->X = -1;	Munchie->sourceRect->Y = -1;
 }
 bool Pacman::Munchies_Collision(Collectable* Munchie) {
 	if (Pacman_Player->position->X + Pacman_Player->sourceRect->Width > Munchie->position->X &&
 		Pacman_Player->position->X < Munchie->position->X + Munchie->texture->GetWidth() &&
 		Pacman_Player->position->Y + Pacman_Player->sourceRect->Height > Munchie->position->Y &&
 		Pacman_Player->position->Y < Munchie->position->Y + Munchie->texture->GetHeight())
-	
+
 		return true;
-		return false;	
+
+	return false;
 }
 void Pacman::UpdateGhost(MovingEnemy* ghost, int elapsedTime)
 {
@@ -354,16 +397,13 @@ void Pacman::DrawEndGame()
 	if (keyboardState->IsKeyDown(Input::Keys::R))
 	{
 		// Restart the game
-		Pacman_Player->dead = false;
-		_score = 0;
-		Pacman_Player->position = new Vector2(350.0f, 350.0f); // Reset Pacman's position
+		Pacman_Player->dead = false;		Pacman_Player->position = new Vector2(350.0f, 350.0f); // Reset Pacman's position
 		_cherryPosition = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight())); // Reset cherry's position
 		_frameCount = 0;
-		_pacmanFrame = 0;
-		_pacmanCurrentFrameTime = 0;
+		_pacmanFrame = 0;		_pacmanCurrentFrameTime = 0;
 		_paused = false;
-		_showStartMessage = true;
-		_startMessageDisplayTime = 3000;
+		_showStartMessage = true;		_startMessageDisplayTime = 3000;
+		_score = 0;//Reset Level Score
 		LoadHighScore(); // Load high score from file
 	}
 }
@@ -412,7 +452,6 @@ void Pacman::UpdateCherryCollision()
 	{
 		// Pacman collided with the cherry
 		UpdateScore();
-
 		// Respawn the cherry at a random position within the visible area
 		_cherryPosition->X = rand() % (Graphics::GetViewportWidth() - _cherryTexture->GetWidth());
 		_cherryPosition->Y = rand() % (Graphics::GetViewportHeight() - _cherryTexture->GetHeight());

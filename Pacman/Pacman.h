@@ -28,7 +28,7 @@ struct Player
 	Texture2D* texture;
 	Vector2* position;
 	bool dead;
-	Player() { texture = new Texture2D(); }
+	Player() { texture = new Texture2D();	dead = false;}
 };
 struct Collectable
 {
@@ -53,13 +53,11 @@ class Pacman : public Game
 private:
 	//Input methods
 	void Input(int elapsedTime, Input::KeyboardState* state);
-	Texture2D* _cherryTexture;
-	Vector2* _cherryPosition;
+
 	//Check methods
 	void CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey);
 	void CheckViewportCollision();
 	// New variables for game state, score, and high score
-	//bool _isGameOver;
 	int _highScore;
 	//Update methods
 	void UpdatePacman(int elapsedTime);
@@ -68,31 +66,25 @@ private:
 	S2D::SoundEffect* _startSound;
 	// Data to represent Pacman
 	Player* Pacman_Player;
-	//Vector2* _pacmanPosition;
-	//Rect* _pacmanSourceRect;
 	int _pacmanFrame;
 	int _pacmanCurrentFrameTime;
 
 	MovingEnemy* _ghosts[GHOSTCOUNT];
 	void CheckGhostCollisions();
-
 	void UpdateGhost(MovingEnemy*, int elapsedTime);
 	//Constant data for Game Variables 
 	float _cPacmanSpeed;
 
-	enum direction { Right, Down, Left, Up };
-	direction pacmanDirection;
+	enum direction { Right, Down, Left, Up };	direction pacmanDirection;
 
 	// Data to represent Munchie
 	Collectable* _munchies[MUNCHIECOUNT];
 	int _frameCount;
 	Rect* _munchieRect;
-	Texture2D* _munchieBlueTexture;
-	Texture2D* _munchieInvertedTexture;
-
+	Texture2D* _munchieBlueTexture;		Texture2D* _munchieInvertedTexture;
 	int _munchieFrame;
 	int _munchieCurrentFrameTime;
-	Texture2D* _cherryInvertedTexture;
+	Texture2D* _cherryInvertedTexture;	Texture2D* _cherryTexture;	Vector2* _cherryPosition;
 	float _cherrySpeed;   // Add this variable to control cherry's movement speed
 	// Position for String
 	Vector2* _stringPosition;
@@ -111,7 +103,6 @@ private:
 	int _cPacmanFrameTime;
 	int _cMunchieFrameTime;
 	// Other member variables...
-	bool _isCherryVisible;
 
 	// Function to handle cherry collision
 	void UpdateCherryCollision();
