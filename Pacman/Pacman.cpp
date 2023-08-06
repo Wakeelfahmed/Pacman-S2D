@@ -4,64 +4,17 @@
 #include <fstream> // Include the header file for file stream operations (ifstream and ofstream)
 #include <iostream>
 #include <iomanip>
-
-const int MAZE_WIDTH = 20;
-const int MAZE_HEIGHT = 15;
-const int TILE_SIZE = 40; // Increase this value to increase the gap between the maze tiles
-
-// Define the maze layout using a 2D array
-int maze[MAZE_HEIGHT][MAZE_WIDTH] = {
-	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0},
-	{0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0},
-	{0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0},
-	{0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0},
-	{0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0},
-	{0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0},
-	{0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0},
-	{0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0},
-	{0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0},
-	{0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0},
-	{0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0},
-	{0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0},
-	{0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0},
-	{0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 3, 0},
-};
-
-// Function to draw the maze
-void drawMaze() {
-	for (int y = 0; y < MAZE_HEIGHT; y++) {
-		for (int x = 0; x < MAZE_WIDTH; x++) {
-			switch (maze[y][x]) {
-			case 0: // Wall
-				SpriteBatch::DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, S2D::Color::Blue);
-				break;
-			case 1: // Empty space
-				SpriteBatch::DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, S2D::Color::Black);
-				break;
-			case 2: // Dot
-				SpriteBatch::DrawRectangle(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 10, 20, S2D::Color::White);
-				break;
-			case 3: // Pacman starting position
-				SpriteBatch::DrawRectangle(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 5, 20, S2D::Color::Yellow);
-				break;
-			}
-		}
-	}
-}
+int PLAYABLE_HEIGHT = (Graphics::GetViewportHeight() - 10);
+int PLAYABLE_WIDTH = (Graphics::GetViewportWidth() - 5);
 Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f), _cPacmanFrameTime(250), _cMunchieFrameTime(500)
 {
-	Pacman_Player = new Player();
-	_pacmanCurrentFrameTime = 0;
-	_pacmanFrame = 0;
-	_frameCount = 0;
-	_munchieCurrentFrameTime = 0;
-	// Add a bool variable to keep track of cherry visibility
-	bool _isCherryVisible = true;
+	Pacman_Player = new Player();		_ghosts[0] = new MovingEnemy();
+	_pacmanCurrentFrameTime = 0;	_pacmanFrame = 0;
+	_frameCount = 0;	_munchieCurrentFrameTime = 0;
+
 	_paused = false;
 	srand(time(NULL));
-	int i;
-	for (i = 0; i < MUNCHIECOUNT; i++)
+	for (int i = 0; i < MUNCHIECOUNT; i++)
 	{
 		_munchies[i] = new Collectable();
 		_munchies[i]->frameCount = rand() % 1;
@@ -69,15 +22,9 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f), 
 		_munchies[i]->frameTime = rand() % 500 + 50;
 	}
 
-	_ghosts[0] = new MovingEnemy();
-	_ghosts[0]->direction = 0;
-	_ghosts[0]->speed = 0.2f;
-
-	//Initialise important Game aspects
-	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Pacman", 60);
+	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Pacman", 60); 	//Initialise important Game aspects
 	Input::Initialise();
-	// Start the Game Loop - This calls Update and Draw in game loop 
-	Graphics::StartGameLoop();
+	Graphics::StartGameLoop();	// Start the Game Loop - This calls Update and Draw in game loop 
 }
 Pacman::~Pacman()
 {
@@ -98,34 +45,28 @@ Pacman::~Pacman()
 }
 void Pacman::LoadContent()
 {
-	// Load Pacman
-	Pacman_Player->texture->Load("Textures/Pacman.tga", false); Pacman_Player->sourceRect = new Rect(0, 0, 32, 32);	Pacman_Player->position = new Vector2(285.0f, 350.0f);	//_pacmanSourceRect = new Rect(0.0f, 0.0f, 32, 32);
-	// Initialize game state, score, and high score
-	Pacman_Player->dead = false;
-	_score = 50;	_highScore = 0;	LoadHighScore();
+	PLAYABLE_HEIGHT = ((Graphics::GetViewportHeight() - 10) - 26);
+	PLAYABLE_WIDTH = (Graphics::GetViewportWidth() - 15) - 3 + 1;
+	Pacman_Player->Initialise_Player();		_ghosts[0]->Initialise_Ghost();//Player all initial settings	
+	_score = 50;	_highScore = 0;	LoadHighScore();		// Initialize game state, score, and high score
 	// Load Cherry Inverted
 	_cherryInvertedTexture = new Texture2D();	_cherryInvertedTexture->Load("Textures/CherryInverted.png", false);	_cherryPosition = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
 	_cherryTexture = new Texture2D();			_cherryTexture->Load("Textures/Cherry.png", false);
 	_cherrySpeed = 0.1f;
-	//_cherryPosition = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
-	// Set the duration (in milliseconds) for displaying the "Start Game" message
+
 	_startMessageDisplayTime = 3000; // 3 seconds
 	_showStartMessage = true;
-	//Load Ghost
-	_ghosts[0]->texture = new Texture2D();	_ghosts[0]->texture->Load("Textures/GhostBlue.png", false);	_ghosts[0]->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
-	_ghosts[0]->sourceRect = new Rect(0, 0, 20, 20);
 
 	_startSound = new S2D::SoundEffect();	_startSound->Load("sound/pop.wav");
 
 	_munchieBlueTexture = new Texture2D();		_munchieBlueTexture->Load("Textures/Munchie.tga", true);// Load Munchies
-	int i;
-	for (i = 0; i < MUNCHIECOUNT; i++) {
+
+	for (int i = 0; i < MUNCHIECOUNT; i++) {
 		_munchies[i]->texture = _munchieBlueTexture;
-		_munchies[i]->sourceRect = new Rect((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()), 12, 12);
+		_munchies[i]->sourceRect = new Rect(((rand() % PLAYABLE_WIDTH) + 3), (rand() % PLAYABLE_HEIGHT) + 25, 12, 12);
 		_munchies[i]->position = new Vector2(_munchies[i]->sourceRect->X, _munchies[i]->sourceRect->Y);
-		//_munchies[i]->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
 	}
-	_munchieInvertedTexture = new Texture2D();	_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);//	_munchieRect = new Rect(100.0f, 450.0f, 12, 12);
+	_munchieInvertedTexture = new Texture2D();	_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);
 
 	// Set string position
 	_stringPosition = new Vector2(10.0f, 25.0f);
@@ -142,9 +83,8 @@ void Pacman::Update(int elapsedTime)
 	// Gets the current state of the keyboard
 	Input::KeyboardState* keyboardState = Input::Keyboard::GetState();
 	if (_showStartMessage && _startMessageDisplayTime == 3000) // Play sound only on the first frame when the message appears
-	{
 		Audio::Play(_startSound);
-	}
+
 	if (_showStartMessage) //dont do anything until game starts
 		return;
 
@@ -208,11 +148,9 @@ void Pacman::Update(int elapsedTime)
 			}
 
 			// Check for collision with screen walls
-			if (Pacman_Player->position->X < 0 || Pacman_Player->position->X > Graphics::GetViewportWidth() ||
-				Pacman_Player->position->Y < 0 || Pacman_Player->position->Y > Graphics::GetViewportHeight())
-			{
-				Pacman_Player->dead = true;
-			}
+			if (Pacman_Player->position->X < 0 || Pacman_Player->position->X > Graphics::GetViewportWidth() || Pacman_Player->position->Y < 0 || Pacman_Player->position->Y > Graphics::GetViewportHeight())
+				Pacman_Player->dead = true;		//Player Collided with wall
+
 			for (int i = 0; i < MUNCHIECOUNT; i++)
 			{
 				if (Munchies_Collision(_munchies[i]))
@@ -220,23 +158,20 @@ void Pacman::Update(int elapsedTime)
 			}
 		}
 	}
-	else // Game is over
+	else // Game is OVER!
 	{
 		// Check for restart input
 		if (keyboardState->IsKeyDown(Input::Keys::R))
 		{
 			// Restart the game
-			Pacman_Player->dead = false;
-			_score = 0;
-			Pacman_Player->position = new Vector2(350.0f, 350.0f); // Reset Pacman's position
+			Pacman_Player->dead = false;			Pacman_Player->position = new Vector2(350.0f, 350.0f); // Reset Pacman's positions
 			_cherryPosition = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight())); // Reset cherry's position
 			_frameCount = 0;
 			_pacmanFrame = 0;
 			_pacmanCurrentFrameTime = 0;
 			_paused = false;
-			_showStartMessage = true;
-			_startMessageDisplayTime = 3000;
-			LoadHighScore(); // Load high score from file
+			_showStartMessage = true;			_startMessageDisplayTime = 3000;
+			_score = 0;			LoadHighScore(); // Load high score from file
 		}
 	}
 }
@@ -268,20 +203,18 @@ void Pacman::Draw(int elapsedTime)
 		{
 			// Draws Pacman and other game elements
 			SpriteBatch::Draw(Pacman_Player->texture, Pacman_Player->position, Pacman_Player->sourceRect);
-			// Show munchie
-			for (int i = 0; i < MUNCHIECOUNT; i++)
+			for (int i = 0; i < MUNCHIECOUNT; i++)			// Show munchie
 			{
-				if (_munchies[i]->position->X == -1)
+				if (_munchies[i]->position->X == -1)//Already eaten munchie
 					continue;
 				if (_frameCount < 30)
-					//SpriteBatch::Draw(_munchieInvertedTexture, _munchies[i]->position, _munchies[i]->sourceRect);
 					SpriteBatch::Draw(_munchieInvertedTexture, _munchies[i]->sourceRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);	// Draw Red Munchie
 				else
 					SpriteBatch::Draw(_munchieBlueTexture, _munchies[i]->sourceRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);		// Draw Blue Munchie
 			}
-			if (_frameCount < 30) {
+			if (_frameCount < 30) 
 				SpriteBatch::Draw(_cherryInvertedTexture, _cherryPosition);
-			}
+			
 			else
 			{
 				SpriteBatch::Draw(_cherryTexture, _cherryPosition);
@@ -302,12 +235,6 @@ void Pacman::Draw(int elapsedTime)
 				SpriteBatch::DrawString(menuStream.str().c_str(), _menuStringPosition, Color::Red);
 			}
 		}
-		//if (_isCherryVisible)
-		//{
-			// Draw the cherries if they are visible
-			//SpriteBatch::Draw(_cherryTexture, _cherryPosition);
-			//SpriteBatch::Draw(_cherryInvertedTexture, _cherryInvertedPosition);
-		//}
 
 		// Draw the score
 		std::stringstream scoreStream;

@@ -28,7 +28,7 @@ struct Player
 	Texture2D* texture;
 	Vector2* position;
 	bool dead;
-	Player() { texture = new Texture2D();	dead = false;}
+	void Initialise_Player() { texture = new Texture2D();	texture->Load("Textures/Pacman.tga", false);	dead = false;	position = new Vector2(350.0f, 350.0f);	sourceRect = new Rect(0, 0, 32, 32); }
 };
 struct Collectable
 {
@@ -47,6 +47,10 @@ struct MovingEnemy
 	Rect* sourceRect;
 	int direction;
 	float speed;
+	void Initialise_Ghost() {
+		texture = new Texture2D();	texture->Load("Textures/GhostBlue.png", false);	direction = 0;	speed = 0.2f;
+		position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));		sourceRect = new Rect(0, 0, 20, 20);
+	}
 };
 class Pacman : public Game
 {
