@@ -177,8 +177,6 @@ void Pacman::Update(int elapsedTime)
 }
 void Pacman::Draw(int elapsedTime)
 {
-	std::stringstream stream;	stream << "Pacman X: " << std::fixed << std::setprecision(1) << Pacman_Player->position->X << "\tY: " << std::fixed << std::setprecision(1) << Pacman_Player->position->Y << std::endl; //retain only 1st decimal
-	//stream << "Pacman X: " << Pacman_Player->position->X << "\tY: " << Pacman_Player->position->Y;
 	SpriteBatch::BeginDraw(); // Starts Drawing
 	if (Pacman_Player->dead) { DrawEndGame(); }
 	else
@@ -224,6 +222,7 @@ void Pacman::Draw(int elapsedTime)
 			}
 			SpriteBatch::Draw(_ghosts[0]->texture, _ghosts[0]->position, _ghosts[0]->sourceRect);
 			// Draws String
+			std::stringstream stream;	stream << "Pacman X: " << std::fixed << std::setprecision(1) << Pacman_Player->position->X << "\tY: " << std::fixed << std::setprecision(1) << Pacman_Player->position->Y << std::endl; //retain only 1st decimal
 			SpriteBatch::DrawString(stream.str().c_str(), _stringPosition, Color::Green);
 
 			// Show "PAUSED!" message if the game is paused
