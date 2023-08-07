@@ -10,8 +10,7 @@
 #define MUNCHIECOUNT 50
 #define GHOSTCOUNT 1
 
-// Just need to include main header file
-#include "S2D/S2D.h"
+#include "S2D/S2D.h"	// Just need to include main header file
 
 // Reduces the amount of typing by including all classes in S2D namespace
 using namespace S2D;
@@ -28,14 +27,13 @@ struct Player
 	Texture2D* texture;
 	Vector2* position;
 	bool dead;
-	void Initialise_Player() { texture = new Texture2D();	texture->Load("Textures/Pacman.tga", false);	dead = false;	position = new Vector2(350.0f, 350.0f);	sourceRect = new Rect(0, 0, 32, 32); }
+	Player() { texture = new Texture2D(); position = new Vector2(350.0f, 350.0f);	dead = false;	sourceRect = new Rect(0, 0, 32, 32);	frame = 0;	currentFrameTime = 0; }
+	void Initialise_Player() { texture->Load("Textures/Pacman.tga", false);	dead = false;	position->X = position->Y = 350.0f;	sourceRect->X = sourceRect->Y = 0;	sourceRect->Height = sourceRect->Width = 32;	frame = 0;	currentFrameTime = 0; speedMultiplier = 0; }
 };
 struct Collectable
 {
-	int currentFrameTime;
-	int frame;
-	int frameCount;
-	int frameTime;
+	int currentFrameTime;	int frame;
+	int frameCount;		int frameTime;
 	Rect* sourceRect;
 	Texture2D* texture;
 	Vector2* position;
@@ -45,92 +43,52 @@ struct MovingEnemy
 	Vector2* position;
 	Texture2D* texture;
 	Rect* sourceRect;
-	int direction;
-	float speed;
+	int direction;	float speed;
 	void Initialise_Ghost() {
 		texture = new Texture2D();	texture->Load("Textures/GhostBlue.png", false);	direction = 0;	speed = 0.2f;
 		position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));		sourceRect = new Rect(0, 0, 20, 20);
 	}
 };
+enum direction { Right, Down, Left, Up };
 class Pacman : public Game
 {
 private:
-	//Input methods
-	void Input(int elapsedTime, Input::KeyboardState* state);
-
-	//Check methods
-	void CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey);
-	void CheckViewportCollision();
-	// New variables for game state, score, and high score
-	int _highScore;
+	int _highScore;			int _score;		// New variables for game state, score, and high score
 	//Update methods
-	void UpdatePacman(int elapsedTime);
-	void UpdateMunchies(Collectable*);
-	bool Munchies_Collision(Collectable* Munchie);
 	S2D::SoundEffect* _startSound;
-	// Data to represent Pacman
-	Player* Pacman_Player;
-	int _pacmanFrame;
-	int _pacmanCurrentFrameTime;
-
+	Player* Pacman_Player;	int Power_Time;		direction pacmanDirection;// Data to represent Pacman
+	Collectable* _munchies[MUNCHIECOUNT];	// Data to represent Munchie
 	MovingEnemy* _ghosts[GHOSTCOUNT];
+	Collectable* Cherry;	Texture2D* _cherryInvertedTexture;
+
 	void CheckGhostCollisions();
 	void UpdateGhost(MovingEnemy*, int elapsedTime);
 	//Constant data for Game Variables 
-	float _cPacmanSpeed;
+	float _cPacmanSpeed;	int _cPacmanFrameTime;
 
-	enum direction { Right, Down, Left, Up };	direction pacmanDirection;
-
-	// Data to represent Munchie
-	Collectable* _munchies[MUNCHIECOUNT];
 	int _frameCount;
-	Rect* _munchieRect;
-	Texture2D* _munchieBlueTexture;		Texture2D* _munchieInvertedTexture;
-	int _munchieFrame;
-	int _munchieCurrentFrameTime;
-	Texture2D* _cherryInvertedTexture;	Texture2D* _cherryTexture;	Vector2* _cherryPosition;
-	float _cherrySpeed;   // Add this variable to control cherry's movement speed
-	// Position for String
-	Vector2* _stringPosition;
-	bool _showStartMessage;
-	int _startMessageDisplayTime; // Declaration of the variable here
-	int _score;
-	// Data for Menu
-	Texture2D* _menuBackground;
-	Rect* _menuRectangle;
-	Vector2* _menuStringPosition;
-	bool _paused;
-	bool _pKeyDown;
-	// New function to show the "End Game" screen
-	void DrawEndGame();
-	// Constants
-	int _cPacmanFrameTime;
-	int _cMunchieFrameTime;
-	// Other member variables...
 
-	// Function to handle cherry collision
-	void UpdateCherryCollision();
-	// Function to update the score and high score
-	void UpdateScore();
+	Vector2* _stringPosition;	// Position for String
+	bool _showStartMessage;		int _startMessageDisplayTime; // Declaration of the variable here
 
-	// Function to load high score from a file
-	void LoadHighScore();
+	Texture2D* _menuBackground;	Rect* _menuRectangle;	Vector2* _menuStringPosition;		// Data for Menu
+	bool _paused;	bool _pKeyDown;
 
-	// Function to save high score to a file
-	void SaveHighScore();
+	void Input(int elapsedTime, Input::KeyboardState* state);		//Input methods
+	void CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey);		//Check methods
+	void CheckViewportCollision();		//Check methods
+	void UpdatePacman(int elapsedTime);
+	void UpdateMunchies(Collectable*);
+	bool Munchies_Collision(Collectable* Munchie);
+	void UpdateCherryCollision();	// Function to handle cherry collision
+	void DrawEndGame();		// function to show the "End Game" screen
+	void UpdateScore();	// Function to update the score and high score
+	void LoadHighScore();	// Function to load high score from a file
+	void SaveHighScore();	// Function to save high score to a file
 public:
-	// <summary> Constructs the Pacman class. </summary>
-	Pacman(int argc, char* argv[]);
-
-	// <summary> Destroys any data associated with Pacman class. </summary>
-	virtual ~Pacman();
-
-	// <summary> All content should be loaded in this method. </summary>
-	void virtual LoadContent();
-
-	// <summary> Called every frame - update game logic here. </summary>
-	void virtual Update(int elapsedTime);
-
-	// <summary> Called every frame - draw game here. </summary>
-	void virtual Draw(int elapsedTime);
+	Pacman(int argc, char* argv[]);	//Constructs the Pacman class.
+	virtual ~Pacman();					//Destroys any data associated with Pacman class.
+	void virtual LoadContent();				//All content should be loaded in this method.
+	void virtual Update(int elapsedTime);	//Called every frame - update game logic here
+	void virtual Draw(int elapsedTime);		//Called every frame - draw game here
 };
