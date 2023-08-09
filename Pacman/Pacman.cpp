@@ -79,7 +79,7 @@ void Pacman::Update(int elapsedTime)
 	if (_showStartMessage) //dont do anything until game starts
 		return;
 
-	if (!Pacman_Player->dead) // Only update the game if it's not over
+	if (!Pacman_Player->dead && !Game_Compeleted) // Only update the game if it's not over
 	{
 		for (int i = 0; i < 100000; i++) {}
 		if (keyboardState->IsKeyDown(Input::Keys::P) && !_pKeyDown)
@@ -91,7 +91,7 @@ void Pacman::Update(int elapsedTime)
 			_pKeyDown = false;
 
 		UpdateCherryCollision();
-		if (!Paused || !Game_Compeleted)
+		if (!Paused)
 		{
 			int Munchies_Eaten = 0;
 			for (int i = 0; i < MUNCHIECOUNT; i++)

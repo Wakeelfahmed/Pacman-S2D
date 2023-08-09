@@ -7,7 +7,7 @@
 #endif
 #endif
 #define MUNCHIECOUNT 50
-#define GHOSTCOUNT 2
+#define GHOSTCOUNT 4
 
 #include "S2D/S2D.h"	// Just need to include main header file
 
@@ -45,7 +45,7 @@ struct MovingEnemy
 	void Initialise_Ghost() {
 		texture = new Texture2D();	texture->Load("Textures/GhostBlue.png", false);	direction = 0;	speed = 0.2f;
 		position = new Vector2((rand() % Graphics::GetViewportWidth()), Generate_rand_num_within_PlayableArea_Height());		sourceRect = new Rect(0, 0, 20, 20);
-		direction = rand() % 5;
+		direction = rand() % 4;
 	}
 };
 
